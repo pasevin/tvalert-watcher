@@ -1,0 +1,44 @@
+# Fly.io config for the TradingView Alerts relay.
+# Deploy: `fly launch --no-deploy` (first time, to create the app), then `fly deploy`.
+# Set PUBLIC_BASE_URL to your app's public https URL so generated webhook links are correct.
+
+app = "alert-watcher-relay"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8787"
+  PUBLIC_BASE_URL = "https://alert-watcher-relay.fly.dev"
+  DB_PATH = "/data/relay.db"
+  PAYMENT_PROVIDER = "stripe"   # "stripe" (active) or "lemonsqueezy" (on hold)
+  # Secrets (set via `fly secrets set`):
+  #   RESEND_API_KEY, MAIL_FROM, ADMIN_SECRET
+  #   Stripe: STRIPE_SECRET_KEY, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_YEARLY,
+  #           STRIPE_WEBHOOK_SECRET, STRIPE_PORTAL_CONFIG_ID
+
+# Persistent volume for the SQLite database (accounts, tokens, sessions).
+[mounts]
+  source = "alert_watcher_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  auto_stop_machines = "off"   # keep the machine running so WebSockets stay connected
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 800
+
+  # Health check: Fly polls /health and auto-restarts the machine if it fails.
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "get"
+    path = "/health"

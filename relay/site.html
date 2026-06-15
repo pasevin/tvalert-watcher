@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TradingView Alerts — your alerts, on your Mac, the second they fire</title>
+    <meta
+      name="description"
+      content="A tiny macOS menu-bar app for the TradingView alerts you already set up. Notification, sound, asset logo, one click to the chart. No tunnel, no setup."
+    />
+    <style>
+      :root {
+        --paper: #ece7d9;
+        --ink: #0e0e0e;
+        --acid: #d6fb41;
+        --red: #ff4a3d;
+        --shadow: 7px 7px 0 0 var(--ink);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+        line-height: 1.4;
+        -webkit-font-smoothing: antialiased;
+      }
+      .mono { font-family: ui-monospace, "SF Mono", Menlo, "Roboto Mono", monospace; }
+      a { color: inherit; text-decoration: none; }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+      /* hard-edged button */
+      .btn {
+        display: inline-block; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.02em; font-size: 14px; padding: 14px 22px;
+        border: 3px solid var(--ink); background: var(--paper); color: var(--ink);
+        box-shadow: var(--shadow); cursor: pointer; transition: transform .08s, box-shadow .08s;
+      }
+      .btn:hover { transform: translate(3px, 3px); box-shadow: 4px 4px 0 0 var(--ink); }
+      .btn-acid { background: var(--acid); }
+      .btn-ink { background: var(--ink); color: var(--paper); }
+
+      /* top bar */
+      header.bar { border-bottom: 4px solid var(--ink); }
+      .bar .wrap { display: flex; align-items: center; justify-content: space-between; height: 70px; }
+      .logo { font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em; font-size: 19px; display: flex; gap: 10px; align-items: center; }
+      .logo .sq { width: 26px; height: 26px; background: var(--acid); border: 3px solid var(--ink); display: grid; place-items: center; font-size: 13px; }
+      .bar nav { display: flex; gap: 20px; align-items: center; }
+      .bar nav a.l { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+      .bar nav a.l:hover { background: var(--acid); box-shadow: 3px 3px 0 var(--ink); }
+      @media (max-width: 760px) { .bar nav a.l { display: none; } }
+
+      /* hero */
+      .hero { border-bottom: 4px solid var(--ink); padding: 70px 0 56px; position: relative; }
+      .kick { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .kick span { background: var(--ink); color: var(--paper); padding: 3px 8px; }
+      h1 {
+        font-size: clamp(46px, 11vw, 132px); line-height: 0.92; letter-spacing: -0.04em;
+        text-transform: uppercase; font-weight: 900; margin: 22px 0 0;
+      }
+      h1 .hl { background: var(--acid); padding: 0 6px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+      .hero p.sub { font-size: clamp(15px, 2vw, 19px); max-width: 620px; margin-top: 26px; }
+      .hero .cta { display: flex; gap: 16px; margin-top: 30px; flex-wrap: wrap; align-items: center; }
+      .hero .price-flag { font-weight: 800; text-transform: uppercase; font-size: 13px; border: 3px solid var(--ink); padding: 10px 14px; background: var(--paper); }
+
+      /* big window mock */
+      .stage { border-bottom: 4px solid var(--ink); padding: 60px 0; }
+      .win { max-width: 460px; border: 4px solid var(--ink); background: #fff; box-shadow: 12px 12px 0 0 var(--ink); }
+      .win .tt { background: var(--ink); color: var(--paper); padding: 10px 14px; font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: 0.06em; display: flex; justify-content: space-between; }
+      .win .st { padding: 9px 14px; border-bottom: 3px solid var(--ink); font-size: 12px; font-weight: 700; }
+      .win .st b { color: #137a3a; }
+      .win .r { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 3px solid var(--ink); }
+      .win .r:last-child { border-bottom: 0; }
+      .win .r .b { width: 30px; height: 30px; border: 2px solid var(--ink); display: grid; place-items: center; font-weight: 800; flex: none; }
+      .win .r .m { flex: 1; min-width: 0; }
+      .win .r .m .s { font-weight: 800; }
+      .win .r .m .x { font-size: 12px; }
+      .win .r .a { font-weight: 800; }
+
+      /* spec list (no cards) */
+      section { border-bottom: 4px solid var(--ink); }
+      .sec-head { display: flex; align-items: baseline; gap: 16px; padding: 26px 0 10px; }
+      .sec-head h2 { font-size: clamp(28px, 5vw, 46px); text-transform: uppercase; letter-spacing: -0.03em; font-weight: 900; }
+      .sec-head .num { font-weight: 800; font-size: 14px; }
+      .spec { }
+      .spec .item { display: grid; grid-template-columns: 80px 1fr; gap: 0; border-top: 3px solid var(--ink); }
+      .spec .item:hover { background: var(--acid); }
+      .spec .item .no { font-weight: 900; font-size: 22px; padding: 18px 0 18px 4px; border-right: 3px solid var(--ink); }
+      .spec .item .bd { padding: 16px 0 16px 22px; display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline; }
+      .spec .item .bd .t { font-weight: 900; text-transform: uppercase; font-size: 19px; letter-spacing: -0.01em; }
+      .spec .item .bd .p { flex: 1; min-width: 240px; font-size: 15px; }
+
+      /* how */
+      .how { display: grid; grid-template-columns: repeat(3, 1fr); }
+      @media (max-width: 760px) { .how { grid-template-columns: 1fr; } }
+      .how .s { padding: 26px 22px 30px; border-right: 3px solid var(--ink); }
+      .how .s:last-child { border-right: 0; }
+      @media (max-width: 760px) { .how .s { border-right: 0; border-top: 3px solid var(--ink); } }
+      .how .s .n { font-weight: 900; font-size: 30px; }
+      .how .s h3 { text-transform: uppercase; margin: 8px 0 6px; font-size: 17px; }
+      .how .s p { font-size: 15px; }
+
+      /* pricing: two raw columns */
+      .pricing { display: grid; grid-template-columns: 1fr 1fr; }
+      @media (max-width: 760px) { .pricing { grid-template-columns: 1fr; } }
+      .plan { padding: 30px 24px 34px; }
+      .plan.free { border-right: 4px solid var(--ink); }
+      @media (max-width: 760px) { .plan.free { border-right: 0; border-bottom: 4px solid var(--ink); } }
+      .plan.pro { background: var(--ink); color: var(--paper); }
+      .plan .pn { font-weight: 900; text-transform: uppercase; font-size: 16px; letter-spacing: 0.04em; }
+      .plan .amt { font-size: clamp(48px, 9vw, 84px); font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin: 14px 0 4px; }
+      .plan .amt small { font-size: 18px; font-weight: 700; }
+      .plan .yr { font-weight: 700; font-size: 13px; text-transform: uppercase; }
+      .plan ul { list-style: none; margin: 22px 0 26px; }
+      .plan li { padding: 9px 0; border-top: 2px solid currentColor; font-weight: 600; font-size: 15px; }
+      .plan li:first-child { border-top: 0; }
+      .plan.pro .btn { background: var(--acid); }
+
+      /* footer */
+      footer { padding: 26px 0; }
+      footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; }
+      footer a { border-bottom: 3px solid var(--ink); }
+      footer a:hover { background: var(--acid); }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <div class="wrap">
+        <a class="logo" href="/"><span class="sq">📈</span> TradingView Alerts</a>
+        <nav>
+          <a class="l" href="#what">What</a>
+          <a class="l" href="#how">How</a>
+          <a class="l" href="#price">Price</a>
+          <a class="btn btn-ink" href="__DOWNLOAD_URL__">Download</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="wrap">
+        <div class="kick mono"><span>macOS menu-bar app</span></div>
+        <h1>Get the alert.<br />The <span class="hl">second</span> it fires.</h1>
+        <p class="sub mono">
+          A tiny macOS menu-bar app for the TradingView alerts you already set up.
+          Notification, sound, the asset's logo, one click to the chart. No tunnel, no setup.
+        </p>
+        <div class="cta">
+          <a class="btn btn-acid" href="__DOWNLOAD_URL__">Download for macOS →</a>
+          <a class="btn" href="#how">How it works</a>
+          <span class="price-flag mono">Free to self-host · Pro $4.99/mo</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage">
+      <div class="wrap">
+        <div class="win mono">
+          <div class="tt"><span>● TradingView Alerts</span><span>3</span></div>
+          <div class="st">CONNECTED — YOUR PERSONAL WEBHOOK <b>●</b></div>
+          <div class="r"><div class="b" style="background:#f7931a;color:#fff">฿</div><div class="m"><div class="s">BTCUSDT</div><div class="x">Breakout above resistance · 2m</div></div><div class="a">↗</div></div>
+          <div class="r"><div class="b" style="background:#627eea;color:#fff">Ξ</div><div class="m"><div class="s">ETHUSDT</div><div class="x">RSI crossed 70 · 8m</div></div><div class="a">↗</div></div>
+          <div class="r"><div class="b" style="background:#111;color:#fff">A</div><div class="m"><div class="s">AAPL</div><div class="x">Crossed your alert level · 21m</div></div><div class="a">↗</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="what">
+      <div class="wrap">
+        <div class="sec-head"><span class="num mono">[ 01 ]</span><h2>What it does</h2></div>
+      </div>
+      <div class="wrap">
+        <div class="spec">
+          <div class="item"><div class="no mono">01</div><div class="bd"><span class="t">Real-time</span><span class="p mono">Pushed over a live connection the instant TradingView fires.</span></div></div>
+          <div class="item"><div class="no mono">02</div><div class="bd"><span class="t">Native</span><span class="p mono">A macOS notification, a menu-bar badge, and an optional sound.</span></div></div>
+          <div class="item"><div class="no mono">03</div><div class="bd"><span class="t">One click → chart</span><span class="p mono">Click an alert, land on that symbol's TradingView chart.</span></div></div>
+          <div class="item"><div class="no mono">04</div><div class="bd"><span class="t">Never missed</span><span class="p mono">Alerts that fire while you're offline are saved and delivered on reconnect.</span></div></div>
+          <div class="item"><div class="no mono">05</div><div class="bd"><span class="t">No setup</span><span class="p mono">Sign in, paste one URL into TradingView. No tunnel, no localhost.</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap">
+        <div class="sec-head"><span class="num mono">[ 02 ]</span><h2>How it works</h2></div>
+      </div>
+      <div class="how">
+        <div class="s"><div class="n mono">01</div><h3>Install &amp; sign in</h3><p class="mono">Download the app, sign in with a magic link. No password.</p></div>
+        <div class="s"><div class="n mono">02</div><h3>Paste your URL</h3><p class="mono">Drop your personal webhook URL into any TradingView alert.</p></div>
+        <div class="s"><div class="n mono">03</div><h3>Get alerted</h3><p class="mono">Alerts hit your Mac instantly. Click to open the chart.</p></div>
+      </div>
+    </section>
+
+    <section id="price">
+      <div class="wrap">
+        <div class="sec-head"><span class="num mono">[ 03 ]</span><h2>Price</h2></div>
+      </div>
+      <div class="pricing">
+        <div class="plan free">
+          <div class="pn">Free — self-managed</div>
+          <div class="amt">$0</div>
+          <div class="yr mono">run it yourself</div>
+          <ul>
+            <li>The full app, all notifications</li>
+            <li>Self-host the relay, or use the local webhook</li>
+            <li>Bring your own tunnel</li>
+            <li>Open source — AGPL-3.0</li>
+          </ul>
+          <a class="btn" href="https://github.com/pasevin/tvalert-watcher">View source →</a>
+        </div>
+        <div class="plan pro">
+          <div class="pn">Pro — hosted</div>
+          <div class="amt">$4.99<small> /mo</small></div>
+          <div class="yr mono">or $40 / year — save 33%</div>
+          <ul>
+            <li>Personal hosted webhook — works instantly</li>
+            <li>Durable offline delivery</li>
+            <li>Crypto &amp; stock logos</li>
+            <li>No tunnel, no maintenance</li>
+          </ul>
+          <a class="btn" href="__DOWNLOAD_URL__">Get Pro →</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap mono">
+        <span>TradingView Alerts — a small macOS app.</span>
+        <span><a href="/privacy">Privacy</a> &nbsp; <a href="/terms">Terms</a> &nbsp; <a href="https://github.com/pasevin/tvalert-watcher">GitHub</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

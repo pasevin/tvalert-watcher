@@ -1,0 +1,25 @@
+# Pings the relay's /health every 15 minutes. If it's down, the job fails and
+# GitHub emails the repo admins (Actions → workflow run failure notification).
+#
+# Note: scheduled Actions on a PRIVATE repo consume Actions minutes. This runs
+# ~96×/day (~free under the 2,000 min/month cap at this cadence). For richer
+# alerting (SMS/Slack/phone) or sub-minute checks, also use an external monitor
+# such as UptimeRobot or BetterStack pointed at the same URL.
+
+name: Relay uptime
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check /health
+        run: |
+          set -euo pipefail
+          body=$(curl -fsS --max-time 20 https://alert-watcher-relay.fly.dev/health)
+          echo "response: $body"
+          echo "$body" | grep -q '"ok":true'
