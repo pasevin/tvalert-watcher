@@ -1,5 +1,8 @@
 # TradingView Alerts
 
+<img width="405" height="575" alt="file-f035905f23d0350532a1222c2ad84d02" src="https://github.com/user-attachments/assets/68101fe7-1bf8-48b1-a0cb-68a5f97430ae" />
+
+
 A native macOS menu-bar app that notifies you the instant your **TradingView alerts**
 fire — native notification, menu-bar badge, sound, and a dropdown of recent alerts.
 
