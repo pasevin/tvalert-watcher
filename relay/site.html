@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TradingView Alerts — your alerts, on your Mac, the second they fire</title>
+    <link rel="icon" type="image/png" href="/icon.png" />
     <meta
       name="description"
       content="A tiny macOS menu-bar app for the TradingView alerts you already set up. Notification, sound, asset logo, one click to the chart. No tunnel, no setup."
@@ -43,8 +44,8 @@
       /* top bar */
       header.bar { border-bottom: 4px solid var(--ink); }
       .bar .wrap { display: flex; align-items: center; justify-content: space-between; height: 70px; }
-      .logo { font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em; font-size: 19px; display: flex; gap: 10px; align-items: center; }
-      .logo .sq { width: 26px; height: 26px; background: var(--acid); border: 3px solid var(--ink); display: grid; place-items: center; font-size: 13px; }
+      .logo { font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em; font-size: 19px; display: flex; gap: 12px; align-items: center; }
+      .logo img { width: 40px; height: 40px; border: 3px solid var(--ink); border-radius: 8px; }
       .bar nav { display: flex; gap: 20px; align-items: center; }
       .bar nav a.l { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
       .bar nav a.l:hover { background: var(--acid); box-shadow: 3px 3px 0 var(--ink); }
@@ -126,7 +127,7 @@
   <body>
     <header class="bar">
       <div class="wrap">
-        <a class="logo" href="/"><span class="sq">📈</span> TradingView Alerts</a>
+        <a class="logo" href="/"><img src="/icon.png" alt="TradingView Alerts" /> TradingView Alerts</a>
         <nav>
           <a class="l" href="#what">What</a>
           <a class="l" href="#how">How</a>

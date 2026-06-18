@@ -199,6 +199,13 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, connections: connections.size, requiresAuth: REQUIRE_AUTH });
     }
 
+    // App icon.
+    if (req.method === "GET" && pathname === "/icon.png") {
+      const buf = readFileSync(new URL("./icon.png", import.meta.url));
+      res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" });
+      return res.end(buf);
+    }
+
     // Marketing landing page.
     if (req.method === "GET" && pathname === "/") {
       return html(res, 200, await getLanding());
