@@ -22,18 +22,39 @@ import * as store from "./db.js";
 import { sendMagicLink } from "./mailer.js";
 import { renderLegal } from "./legal.js";
 
-// Marketing landing page (served at /). DOWNLOAD_URL points the CTA buttons at
-// the published app download (Glaze store, etc.); defaults to "#" until set.
-const DOWNLOAD_URL = process.env.DOWNLOAD_URL || "#";
-let landingHtml = null;
-function getLanding() {
-  if (landingHtml === null) {
-    landingHtml = readFileSync(new URL("./site.html", import.meta.url), "utf-8").replaceAll(
-      "__DOWNLOAD_URL__",
-      DOWNLOAD_URL,
+// Marketing landing page (served at /). DOWNLOAD_URL auto-resolves to the
+// latest GitHub release DMG — no need to update on each release.
+const GITHUB_REPO = "pasevin/tradingview-alerts";
+let cachedDownloadUrl = null;
+let cachedAt = 0;
+
+async function getDownloadUrl() {
+  // Cache for 1 hour
+  if (cachedDownloadUrl && Date.now() - cachedAt < 3600000) return cachedDownloadUrl;
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
+      { headers: { "User-Agent": "tvalert-relay" } }
     );
+    const release = await res.json();
+    const dmg = release.assets?.find(a => a.name.endsWith(".dmg"));
+    if (dmg) {
+      cachedDownloadUrl = dmg.browser_download_url;
+      cachedAt = Date.now();
+      return cachedDownloadUrl;
+    }
+  } catch (e) {
+    // fall through to env var or fallback
   }
-  return landingHtml;
+  return process.env.DOWNLOAD_URL || `https://github.com/${GITHUB_REPO}/releases/latest`;
+}
+let landingHtml = null;
+async function getLanding() {
+  const downloadUrl = await getDownloadUrl();
+  if (landingHtml === null) {
+    landingHtml = readFileSync(new URL("./site.html", import.meta.url), "utf-8");
+  }
+  return landingHtml.replaceAll("__DOWNLOAD_URL__", downloadUrl);
 }
 
 const PORT = Number(process.env.PORT || 8787);
@@ -180,7 +201,7 @@ const server = http.createServer(async (req, res) => {
 
     // Marketing landing page.
     if (req.method === "GET" && pathname === "/") {
-      return html(res, 200, getLanding());
+      return html(res, 200, await getLanding());
     }
 
     // Public legal pages (for Stripe + app links).
